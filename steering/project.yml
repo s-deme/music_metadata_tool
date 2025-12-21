@@ -1,0 +1,12 @@
+# MUSUBI Project Configuration
+name: music-metadata-tool
+description: 音楽ファイルのメタデータを読み取り・検証・一括更新し、CSV/TSV との往復やファイル名整形を行う CLI ツール
+locale: ja
+version: "0.1.0"
+created: 2025-12-15
+
+# Technology Stack
+tech_stack:
+  approach: single
+  languages:
+    - python

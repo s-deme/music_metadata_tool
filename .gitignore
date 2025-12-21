@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+node_modules/
+storage/
+music/
+docs/requirements.md
+specs/requirements.md
+.DS_Store
+.codex/

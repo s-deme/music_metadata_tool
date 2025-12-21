@@ -1,0 +1,57 @@
+[project]
+name = "music-metadata-tool"
+version = "0.1.0"
+description = "CLI for reading, validating, and bulk-updating music file metadata with CSV/TSV round trips and file renaming."
+requires-python = ">=3.11"
+dependencies = [
+    "mutagen>=1.47.0",
+    "typer>=0.12.0",
+    "rich>=13.0.0",
+]
+
+[project.scripts]
+music-metadata-tool = "music_metadata_tool.interface.cli.main:app"
+music-metadata-lib = "music_metadata_lib.interface.cli.main:app"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "ruff>=0.1",
+    "mypy>=1.0",
+]
+pandas = [
+    "pandas>=2.0",
+]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src", "music_metadata_lib" = "lib/music_metadata_lib"}
+packages = [
+    "music_metadata_tool",
+    "music_metadata_tool.interface",
+    "music_metadata_tool.interface.cli",
+    "music_metadata_lib",
+    "music_metadata_lib.application",
+    "music_metadata_lib.domain",
+    "music_metadata_lib.infrastructure",
+    "music_metadata_lib.interface",
+    "music_metadata_lib.interface.cli",
+    "music_metadata_lib.cli",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

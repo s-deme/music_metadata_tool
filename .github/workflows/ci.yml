@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build app container
+        run: docker compose build
+
+      - name: Run test suite
+        run: ./bin/test
+
+  reverse-spec:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build app container
+        run: docker compose build
+
+      - name: Regenerate reverse spec markdown
+        run: ./bin/reverse-spec-md
+
+      - name: Check committed reverse spec markdown
+        run: git diff --exit-code -- docs/reverse-spec/user-spec.md

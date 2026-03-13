@@ -2,9 +2,11 @@ import csv
 from pathlib import Path
 
 import pytest
+import mutagen
 
 from music_metadata_lib.application.apply import ApplyError
-from music_metadata_lib.infrastructure.apply_adapters import DelimitedReaderAdapter
+from music_metadata_lib.infrastructure.apply_adapters import DelimitedReaderAdapter, MetadataWriterAdapter
+from music_metadata_lib.domain.constants import CSV_HEADERS
 
 
 def _write_csv(path: Path, rows: list[list[str]], delimiter: str = ",") -> None:
@@ -21,7 +23,7 @@ def test_delimited_reader_missing_header_raises(tmp_path: Path) -> None:
 
     reader = DelimitedReaderAdapter()
     with pytest.raises(ApplyError):
-        list(reader.read(input_path, ","))
+        list(reader.read(input_path, ",", list(CSV_HEADERS)))
 
 
 def test_delimited_reader_reads_tsv(tmp_path: Path) -> None:
@@ -48,5 +50,16 @@ def test_delimited_reader_reads_tsv(tmp_path: Path) -> None:
     )
 
     reader = DelimitedReaderAdapter()
-    rows = list(reader.read(input_path, "\t"))
+    rows = list(reader.read(input_path, "\t", list(CSV_HEADERS)))
     assert len(rows) == 1
+
+
+def test_metadata_writer_raises_for_unreadable_audio(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    audio_path = tmp_path / "track.mp3"
+    audio_path.write_bytes(b"")
+
+    monkeypatch.setattr(mutagen, "File", lambda *args, **kwargs: None)
+
+    writer = MetadataWriterAdapter()
+    with pytest.raises(ApplyError, match="Unsupported or unreadable audio file"):
+        writer.write(audio_path, {"title": "Title"})

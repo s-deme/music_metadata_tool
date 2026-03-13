@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Optional, Protocol
 
+from music_metadata_lib.domain.constants import CSV_HEADERS
+
 
 @dataclass(frozen=True)
 class TagSet:
@@ -43,6 +45,7 @@ class ScanRequest:
 
     root_dir: Path
     output_path: Optional[Path] = None
+    columns: Optional[list[str]] = None
 
 
 class ScanError(RuntimeError):
@@ -68,7 +71,13 @@ class MetadataReaderPort(Protocol):
 class DelimitedWriterPort(Protocol):
     """CSV/TSV 出力ポート。"""
 
-    def write(self, rows: Iterable[ScanRow], output_path: Optional[Path], delimiter: str) -> None:
+    def write(
+        self,
+        rows: Iterable[ScanRow],
+        output_path: Optional[Path],
+        delimiter: str,
+        headers: list[str],
+    ) -> None:
         ...
 
 
@@ -92,6 +101,7 @@ class ScanDirectoryUseCase:
 
         output_path = request.output_path
         delimiter = "\t" if output_path and output_path.suffix.lower() == ".tsv" else ","
+        headers = request.columns or list(CSV_HEADERS)
 
         count = 0
 
@@ -102,7 +112,7 @@ class ScanDirectoryUseCase:
                 yield self._build_row(file_path, self._reader.read(file_path))
 
         rows = iter_rows()
-        self._writer.write(rows, output_path, delimiter)
+        self._writer.write(rows, output_path, delimiter, headers)
         return count
 
     @staticmethod

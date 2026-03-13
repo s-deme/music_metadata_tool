@@ -59,25 +59,22 @@ class MetadataReaderAdapter(MetadataReaderPort):
 class DelimitedWriterAdapter(DelimitedWriterPort):
     """CSV/TSV の逐次書き込みアダプタ。"""
 
-    def write(self, rows: Iterable[ScanRow], output_path: Optional[Path], delimiter: str) -> None:
+    def write(
+        self,
+        rows: Iterable[ScanRow],
+        output_path: Optional[Path],
+        delimiter: str,
+        headers: list[str],
+    ) -> None:
         with _open_output(output_path) as handle:
             writer = csv.writer(handle, delimiter=delimiter)
-            writer.writerow(CSV_HEADERS)
+            writer.writerow(headers)
             for row in rows:
-                writer.writerow(
-                    [
-                        row.file_path,
-                        row.format,
-                        row.title,
-                        row.artist,
-                        row.album,
-                        row.album_artist,
-                        row.track_number,
-                        row.disc_number,
-                        row.year,
-                        row.genre,
-                    ]
-                )
+                writer.writerow(_row_values(row, headers))
+
+
+def _row_values(row: ScanRow, headers: list[str]) -> list[str]:
+    return [str(getattr(row, header)) for header in headers]
 
 
 def _pick_tag(tags: dict, keys: Iterable[str]) -> str:

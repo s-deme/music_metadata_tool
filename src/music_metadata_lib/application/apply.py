@@ -6,21 +6,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Optional, Protocol
 
+from music_metadata_lib.domain.config import TAG_COLUMNS
 from music_metadata_lib.domain.constants import CSV_HEADERS, SUPPORTED_EXTENSIONS
-
-
-@dataclass(frozen=True)
-class TagSet:
-    """書き込み用のタグ集合。"""
-
-    title: str
-    artist: str
-    album: str
-    album_artist: str
-    track_number: str
-    disc_number: str
-    year: str
-    genre: str
 
 
 @dataclass(frozen=True)
@@ -28,15 +15,7 @@ class ApplyRowData:
     """CSV/TSV の 1 行を表すデータ。"""
 
     file_path: str
-    format: str
-    title: str
-    artist: str
-    album: str
-    album_artist: str
-    track_number: str
-    disc_number: str
-    year: str
-    genre: str
+    values: dict[str, str]
 
 
 @dataclass(frozen=True)
@@ -45,6 +24,7 @@ class ApplyRequest:
 
     input_path: Path
     write: bool = False
+    columns: Optional[list[str]] = None
 
 
 class ApplyError(RuntimeError):
@@ -56,14 +36,19 @@ class ApplyError(RuntimeError):
 class DelimitedReaderPort(Protocol):
     """CSV/TSV 読み取りポート。"""
 
-    def read(self, input_path: Path, delimiter: str) -> Iterable[ApplyRowData]:
+    def read(
+        self,
+        input_path: Path,
+        delimiter: str,
+        required_headers: list[str],
+    ) -> Iterable[ApplyRowData]:
         ...
 
 
 class MetadataWriterPort(Protocol):
     """タグ書き込みポート。"""
 
-    def write(self, file_path: Path, tags: TagSet) -> None:
+    def write(self, file_path: Path, tags: dict[str, str]) -> None:
         ...
 
 
@@ -81,23 +66,18 @@ class ApplyMetadataUseCase:
 
         delimiter = "\t" if input_path.suffix.lower() == ".tsv" else ","
         base_dir = input_path.parent
+        columns = request.columns or list(CSV_HEADERS)
+        tag_columns = [column for column in columns if column in TAG_COLUMNS]
 
         processed = 0
-        for row in self._reader.read(input_path, delimiter):
+        for row in self._reader.read(input_path, delimiter, columns):
             processed += 1
+            if not row.file_path:
+                raise ApplyError("Missing file_path value.")
             resolved_path = self._resolve_path(base_dir, row.file_path)
             self._validate_audio_path(resolved_path)
 
-            tags = TagSet(
-                title=row.title,
-                artist=row.artist,
-                album=row.album,
-                album_artist=row.album_artist,
-                track_number=row.track_number,
-                disc_number=row.disc_number,
-                year=row.year,
-                genre=row.genre,
-            )
+            tags = {column: row.values.get(column, "") for column in tag_columns}
 
             if request.write:
                 self._writer.write(resolved_path, tags)

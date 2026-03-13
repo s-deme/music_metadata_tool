@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+docker compose run --rm app \
+  python tools/csv_to_user_spec_md.py \
+  docs/reverse-spec/feature-inventory.csv \
+  docs/reverse-spec/user-spec.md
+
+docker compose run --rm app \
+  python tools/csv_to_html.py \
+  docs/reverse-spec/feature-inventory.csv \
+  docs/reverse-spec/user-spec.html

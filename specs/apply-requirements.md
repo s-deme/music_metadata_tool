@@ -9,6 +9,7 @@
 - 入力ファイルは scan 出力と同じヘッダーを持つ
 - CSV/TSV は UTF-8 (BOM なし) で読み込む
 - file_path が相対パスの場合は、CSV/TSV のあるディレクトリを基準に解決する
+- `config.json` が存在する場合は `columns` に列順序/表示が定義され、`file_path` は必須とする
 
 ## Requirements
 
@@ -59,3 +60,17 @@ The system SHALL resolve each `file_path` entry to an absolute path before proce
 **Acceptance Criteria**
 - 相対パスは CSV/TSV のディレクトリを基準に解決される
 - すべての処理対象パスが絶対パスになる
+
+### REQ-APPLY-008 (Event-driven)
+WHEN `config.json` is present, the system SHALL require only the configured columns and update only those columns.
+
+**Acceptance Criteria**
+- 入力に必須となる列は `config.json` の `columns` に一致する
+- 設定に含まれない列は更新対象にならない
+
+### REQ-APPLY-009 (Unwanted behavior)
+IF `config.json` is invalid, THEN the system SHALL exit with a non-zero status and report the error.
+
+**Acceptance Criteria**
+- 終了コードが 0 以外
+- エラーメッセージが設定ファイル起因であることが分かる

@@ -7,6 +7,7 @@ import typer
 
 from music_metadata_lib.application.apply import ApplyError, ApplyMetadataUseCase, ApplyRequest
 from music_metadata_lib.application.scan import ScanDirectoryUseCase, ScanError, ScanRequest
+from music_metadata_lib.domain.config import ConfigError, load_column_config
 from music_metadata_lib.infrastructure.apply_adapters import DelimitedReaderAdapter, MetadataWriterAdapter
 from music_metadata_lib.infrastructure.scan_adapters import (
     AudioScannerAdapter,
@@ -33,13 +34,21 @@ def scan(
 
     log_ctx = LogContext(command="scan", log_path=default_log_path())
     log_event(log_ctx, "START", f"directory={directory}")
+    try:
+        column_config = load_column_config()
+    except ConfigError as exc:
+        log_event(log_ctx, "ERROR", str(exc))
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
     use_case = ScanDirectoryUseCase(
         scanner=AudioScannerAdapter(),
         reader=MetadataReaderAdapter(),
         writer=DelimitedWriterAdapter(),
     )
     try:
-        count = use_case.execute(ScanRequest(root_dir=directory, output_path=output))
+        count = use_case.execute(
+            ScanRequest(root_dir=directory, output_path=output, columns=column_config.columns)
+        )
         log_event(log_ctx, "END", "scan completed", count=count)
     except ScanError as exc:
         log_event(log_ctx, "ERROR", str(exc))
@@ -56,12 +65,20 @@ def apply(
 
     log_ctx = LogContext(command="apply", log_path=default_log_path())
     log_event(log_ctx, "START", f"input={input_path} write={write}")
+    try:
+        column_config = load_column_config()
+    except ConfigError as exc:
+        log_event(log_ctx, "ERROR", str(exc))
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
     use_case = ApplyMetadataUseCase(
         reader=DelimitedReaderAdapter(),
         writer=MetadataWriterAdapter(),
     )
     try:
-        count = use_case.execute(ApplyRequest(input_path=input_path, write=write))
+        count = use_case.execute(
+            ApplyRequest(input_path=input_path, write=write, columns=column_config.columns)
+        )
         written = count if write else 0
         log_event(log_ctx, "END", f"apply completed written={written}", count=count)
     except ApplyError as exc:

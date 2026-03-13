@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from music_metadata_lib.application.scan import ScanDirectoryUseCase, ScanError, ScanRequest, TagSet
+from music_metadata_lib.domain.constants import CSV_HEADERS
 from music_metadata_lib.infrastructure.scan_adapters import AudioScannerAdapter, DelimitedWriterAdapter
 
 
@@ -42,7 +43,7 @@ def test_scan_writes_stdout_csv(monkeypatch: pytest.MonkeyPatch, tmp_path: Path)
         reader=FakeMetadataReader(),
         writer=DelimitedWriterAdapter(),
     )
-    use_case.execute(ScanRequest(root_dir=tmp_path))
+    use_case.execute(ScanRequest(root_dir=tmp_path, columns=list(CSV_HEADERS)))
 
     buffer.seek(0)
     rows = list(csv.reader(buffer))
@@ -64,7 +65,9 @@ def test_scan_writes_tsv_file(tmp_path: Path) -> None:
         reader=FakeMetadataReader(),
         writer=DelimitedWriterAdapter(),
     )
-    use_case.execute(ScanRequest(root_dir=tmp_path, output_path=output_path))
+    use_case.execute(
+        ScanRequest(root_dir=tmp_path, output_path=output_path, columns=list(CSV_HEADERS))
+    )
 
     with output_path.open("r", encoding="utf-8") as handle:
         rows = list(csv.reader(handle, delimiter="\t"))
@@ -91,4 +94,28 @@ def test_scan_invalid_directory_raises() -> None:
         writer=DelimitedWriterAdapter(),
     )
     with pytest.raises(ScanError):
-        use_case.execute(ScanRequest(root_dir=Path("does-not-exist")))
+        use_case.execute(ScanRequest(root_dir=Path("does-not-exist"), columns=list(CSV_HEADERS)))
+
+
+def test_scan_uses_configured_column_order(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    _touch(tmp_path / "track.flac")
+
+    buffer = io.StringIO()
+    monkeypatch.setattr(sys, "stdout", buffer)
+
+    use_case = ScanDirectoryUseCase(
+        scanner=AudioScannerAdapter(),
+        reader=FakeMetadataReader(),
+        writer=DelimitedWriterAdapter(),
+    )
+    use_case.execute(
+        ScanRequest(
+            root_dir=tmp_path,
+            columns=["file_path", "title", "artist"],
+        )
+    )
+
+    buffer.seek(0)
+    rows = list(csv.reader(buffer))
+    assert rows[0] == ["file_path", "title", "artist"]
+    assert len(rows[1]) == 3

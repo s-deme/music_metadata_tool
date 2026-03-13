@@ -40,3 +40,38 @@ def test_apply_missing_file_exits_non_zero(tmp_path: Path) -> None:
 
     result = runner.invoke(app, ["apply", str(input_path), "--write"])
     assert result.exit_code != 0
+
+
+def test_apply_missing_input_exits_non_zero() -> None:
+    result = runner.invoke(app, ["apply", "missing.csv"])
+
+    assert result.exit_code != 0
+
+
+def test_apply_invalid_config_exits_non_zero(tmp_path: Path, monkeypatch) -> None:
+    input_path = tmp_path / "scan.csv"
+    _write_csv(
+        input_path,
+        [
+            [
+                "file_path",
+                "format",
+                "title",
+                "artist",
+                "album",
+                "album_artist",
+                "track_number",
+                "disc_number",
+                "year",
+                "genre",
+            ],
+        ],
+    )
+    (tmp_path / "config.json").write_text("{", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+
+    result = runner.invoke(app, ["apply", str(input_path)])
+
+    assert result.exit_code != 0
+    stderr = getattr(result, "stderr", "")
+    assert "Failed to load config" in result.output or "Failed to load config" in stderr

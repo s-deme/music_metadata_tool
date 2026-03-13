@@ -7,8 +7,9 @@
 ## Assumptions
 
 - 対象フォーマットは拡張子で判定する: `.mp3`, `.flac`, `.wav`, `.aiff`, `.aif`, `.ogg`, `.m4a`
-- CSV/TSV は UTF-8 (BOM なし) で出力する
+- 出力先がファイルの場合は UTF-8 (BOM なし) で書き出す（STDOUT は環境依存）
 - 出力は再現性のためパス昇順で整列する
+- `config.json` が存在する場合は `columns` に列順序/表示が定義され、`file_path` は必須とする
 
 ## Requirements
 
@@ -75,8 +76,16 @@ The system SHALL sort output rows by `file_path` in ascending order to ensure re
 **Acceptance Criteria**
 - 同一入力で同一順序になる
 
-### REQ-SCAN-010 (Ubiquitous)
-The system SHALL complete scanning 1,000 files within 60 seconds on a typical developer machine.
+### REQ-SCAN-011 (Event-driven)
+WHEN `config.json` is present, the system SHALL output only the configured columns in the configured order.
 
 **Acceptance Criteria**
-- 1,000 ファイルのサンプルで 60 秒以内に完了する
+- 出力ヘッダーの順序が `config.json` の `columns` に一致する
+- `columns` に含まれない列は出力しない
+
+### REQ-SCAN-012 (Unwanted behavior)
+IF `config.json` is invalid, THEN the system SHALL exit with a non-zero status and report the error.
+
+**Acceptance Criteria**
+- 終了コードが 0 以外
+- エラーメッセージが設定ファイル起因であることが分かる

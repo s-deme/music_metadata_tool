@@ -1,8 +1,13 @@
 # music-metadata-tool
 
-音楽ファイルのメタデータを一覧出力・CSV から更新するための CLI（雛形）。
+音楽ファイルのメタデータを一覧出力し、CSV/TSV から更新する CLI。
 
-## Docker での環境構築
+## 概要
+
+- scan: 指定ディレクトリ配下を再帰的に走査し、タグを CSV/TSV に出力
+- apply: CSV/TSV を読み込み、タグ更新（`--write` で書き込み）
+
+## Docker での実行
 
 前提: Docker と Docker Compose が利用できること。
 
@@ -18,25 +23,31 @@ docker compose build
 docker compose run --rm app
 ```
 
-### 例: テスト実行
+`/workspace/music` には既定でリポジトリ内の `./music` をマウントします。別の音楽フォルダを使う場合は、実行前に `MUSIC_SOURCE_DIR` を指定します。
 
 ```bash
-docker compose run --rm app pytest -q
+MUSIC_SOURCE_DIR=/absolute/path/to/music docker compose run --rm app
 ```
 
-### 例: CLI 起動
+### テスト実行
+
+```bash
+docker compose run --rm app python -m pytest -q
+```
+
+### CLI ヘルプ
 
 ```bash
 docker compose run --rm app python -m music_metadata_tool.interface.cli.main --help
 ```
 
-### 例: scan 実行（基本）
+### scan（基本）
 
 ```bash
 docker compose run --rm app music-metadata-tool scan /workspace/music --output /workspace/storage/scan.tsv
 ```
 
-### scan 実行の詳細
+### scan の詳細
 
 `scan` は指定ディレクトリ配下を再帰的に走査し、音楽ファイルのタグを CSV/TSV に出力します。
 
@@ -56,7 +67,31 @@ docker compose run --rm app music-metadata-tool scan /workspace/music --output /
 file_path,format,title,artist,album,album_artist,track_number,disc_number,year,genre
 ```
 
-STDOUT へ出力する例（`scan.tsv` を作らず、画面に出す）:
+### 設定ファイル（列の表示・順序）
+
+プロジェクト直下の `config.json` で出力列の表示/順序を変更できます。
+`apply` も同じ設定に従い、設定に含まれる列のみを更新対象とします。
+
+公開用リポジトリには [config.example.json](/mnt/e/script/music_metadata_tool/config.example.json) を置いてあります。必要に応じてこれを `config.json` としてコピーして使います。
+
+```json
+{
+  "columns": [
+    "file_path",
+    "title",
+    "artist",
+    "album"
+  ]
+}
+```
+
+注意点:
+
+- `file_path` は必須
+- 設定に含めない列は出力/更新対象から除外される
+  - 省略した列は `apply` 実行時に変更しない
+
+STDOUT へ出力する例:
 
 ```bash
 docker compose run --rm app music-metadata-tool scan /workspace/music > /workspace/storage/scan.csv
@@ -72,12 +107,6 @@ docker compose run --rm app music-metadata-tool scan /workspace/music --output /
 
 ```bash
 docker compose run --rm app music-metadata-tool scan /workspace/music/albums --output /workspace/storage/albums.tsv
-```
-
-Windows の音楽フォルダを読む例:
-
-```bash
-docker compose run --rm app music-metadata-tool scan /workspace/music --output /workspace/storage/scan.tsv
 ```
 
 参照フォルダを変える方法（PowerShell 例）:
@@ -100,13 +129,13 @@ docker compose run --rm app music-metadata-tool scan /workspace/storage > E:\scr
 docker compose run --rm app music-metadata-tool scan /workspace/storage | head -n 5
 ```
 
-### 例: apply 実行（ドライラン）
+### apply（ドライラン）
 
 ```bash
 docker compose run --rm app music-metadata-tool apply /workspace/storage/scan.tsv
 ```
 
-### 例: apply 実行（書き込み）
+### apply（書き込み）
 
 ```bash
 docker compose run --rm app music-metadata-tool apply /workspace/storage/scan.tsv --write
@@ -116,5 +145,46 @@ docker compose run --rm app music-metadata-tool apply /workspace/storage/scan.ts
 
 CLI 実行ログは `storage/logs/cli.log` に追記されます（開始/終了/エラー/対象件数）。  
 出力先は環境変数 `MUSIC_METADATA_LOG_PATH` で変更できます。
+
+## 開発・検証方針
+
+- Python 実行、テスト、CLI 検証は Docker コンテナ内で行う
+- ホスト側の Python 環境には依存しない
+- テストの標準コマンドは `docker compose run --rm app python -m pytest -q`
+
+## リバース仕様書
+
+既存実装から逆生成した利用者向け仕様は `docs/reverse-spec/` に配置しています。
+
+- 一次ソース: [docs/reverse-spec/feature-inventory.csv](/mnt/e/script/music_metadata_tool/docs/reverse-spec/feature-inventory.csv)
+- 利用者向け文書: [docs/reverse-spec/user-spec.md](/mnt/e/script/music_metadata_tool/docs/reverse-spec/user-spec.md)
+- HTML 版: `docs/reverse-spec/user-spec.html`
+
+更新手順:
+
+1. `docs/reverse-spec/feature-inventory.csv` を更新する
+2. `./bin/reverse-spec-md` で Markdown を再生成する
+3. `./bin/reverse-spec-html` で HTML を再生成する
+4. `./bin/test` でテストを確認する
+
+Markdown を再生成する場合:
+
+```bash
+./bin/reverse-spec-md
+```
+
+HTML を再生成する場合:
+
+```bash
+./bin/reverse-spec-html
+```
+
+## 未実装コマンド
+
+- `rename`
+- `validate`
+- `config`
+
+これらは現時点ではプレースホルダです。ヘルプには表示されますが、実処理は持たず `not yet implemented` を返します。
 
 ソースは `.` を `/workspace` にマウントしているため、ホストの変更がコンテナに反映されます。

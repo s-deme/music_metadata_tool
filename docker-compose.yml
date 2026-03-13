@@ -4,11 +4,13 @@ services:
     working_dir: /workspace
     volumes:
       - .:/workspace
-      - E:\path\to\music:/workspace/music
+      - type: bind
+        source: ${MUSIC_SOURCE_DIR:-./music}
+        target: /workspace/music
     tty: true
     stdin_open: true
     environment:
       PYTHONUNBUFFERED: "1"
       PIP_DISABLE_PIP_VERSION_CHECK: "1"
-      PYTHONPATH: "/workspace/lib:/workspace/src"
+      PYTHONPATH: "/workspace/src"
       PATH: "/workspace/bin:/opt/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"

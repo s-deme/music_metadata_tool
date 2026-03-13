@@ -7,6 +7,7 @@
 ## Architecture Overview
 
 Library-first を前提に、`apply` は Application 層のユースケースとして実装し、CLI は薄い I/O 層に留める。
+列設定は `config.json` を CLI で読み込み、ユースケースへ渡す。
 
 ## C4 Context (Level 1)
 
@@ -18,6 +19,7 @@ Library-first を前提に、`apply` は Application 層のユースケースと
 
 - **CLI Container** (Typer)
   - 役割: 引数解析、`--write` の有無判定、エラーメッセージ
+  - 役割: `config.json` の読み込みと列設定の検証
   - 呼び出し先: Application の `ApplyMetadataUseCase`
 - **Application Container**
   - 役割: CSV/TSV 読み取り、パス解決、バリデーション、書き込み指示
@@ -31,6 +33,7 @@ Library-first を前提に、`apply` は Application 層のユースケースと
 
 - **ApplyMetadataUseCase**
   - 入力: CSV/TSV パス、`--write` フラグ
+  - 入力: 列順序/表示のリスト
   - 出力: 例外/終了コードのみ（通常は STDOUT 出力なし）
   - 依存: `DelimitedReaderPort`, `MetadataWriterPort`
 
@@ -57,6 +60,13 @@ Library-first を前提に、`apply` は Application 層のユースケースと
 - **Decision**: `.tsv` は TSV、それ以外は CSV として扱う
 - **Consequences**: 誤った拡張子は出力形式の誤解釈につながる
 
+### ADR-007: 列の表示/順序は `config.json` で制御する
+
+- **Status**: Accepted
+- **Context**: 更新対象の列を最小化したい
+- **Decision**: `config.json` の `columns` に列の順序/表示を定義し、apply はその列のみを必須/更新対象とする
+- **Consequences**: 設定と CSV の整合性が重要になる
+
 ## Traceability Matrix
 
 - REQ-APPLY-001 -> DelimitedReaderAdapter
@@ -66,3 +76,5 @@ Library-first を前提に、`apply` は Application 層のユースケースと
 - REQ-APPLY-005 -> ApplyMetadataUseCase, CLI apply
 - REQ-APPLY-006 -> ApplyMetadataUseCase
 - REQ-APPLY-007 -> ApplyMetadataUseCase
+- REQ-APPLY-008 -> CLI config loader, DelimitedReaderAdapter
+- REQ-APPLY-009 -> CLI error mapping

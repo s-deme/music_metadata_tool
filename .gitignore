@@ -10,7 +10,14 @@ build/
 node_modules/
 storage/
 music/
+config.json
 docs/requirements.md
 specs/requirements.md
+docs/reverse-spec/user-spec.html
 .DS_Store
-.codex/
+.codex/*
+!.codex/AGENTS.md
+!.codex/prompts/
+!.codex/prompts/**
+!.codex/workflows/
+!.codex/workflows/**

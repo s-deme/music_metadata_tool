@@ -14,3 +14,4 @@ services:
       PIP_DISABLE_PIP_VERSION_CHECK: "1"
       PYTHONPATH: "/workspace/src"
       PATH: "/workspace/bin:/opt/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+      MUSIC_METADATA_LOG_PATH: ${MUSIC_METADATA_LOG_PATH:-}

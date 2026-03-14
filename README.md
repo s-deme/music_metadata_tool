@@ -29,6 +29,10 @@ docker compose run --rm app
 MUSIC_SOURCE_DIR=/absolute/path/to/music docker compose run --rm app
 ```
 
+ローカル固定で使う場合は、プロジェクト直下に `.env` を置いて `MUSIC_SOURCE_DIR` を設定します。`.env` は Git 管理しません。公開用には [\.env.example](/mnt/e/script/music_metadata_tool/.env.example) を置いてあります。
+
+`.env` では必要に応じて `MUSIC_METADATA_LOG_PATH` も設定できます。
+
 ### テスト実行
 
 ```bash
@@ -112,9 +116,8 @@ docker compose run --rm app music-metadata-tool scan /workspace/music/albums --o
 参照フォルダを変える方法（PowerShell 例）:
 
 ```powershell
-docker compose run --rm `
-  -v E:\music\albums:/workspace/music `
-  app music-metadata-tool scan /workspace/music --output /workspace/storage/scan.tsv
+$env:MUSIC_SOURCE_DIR="E:\music\albums"
+docker compose run --rm app music-metadata-tool scan /workspace/music --output /workspace/storage/scan.tsv
 ```
 
 ホスト側の任意パスに保存したい場合（Windows PowerShell）:
@@ -158,7 +161,7 @@ CLI 実行ログは `storage/logs/cli.log` に追記されます（開始/終了
 
 - 一次ソース: [docs/reverse-spec/feature-inventory.csv](/mnt/e/script/music_metadata_tool/docs/reverse-spec/feature-inventory.csv)
 - 利用者向け文書: [docs/reverse-spec/user-spec.md](/mnt/e/script/music_metadata_tool/docs/reverse-spec/user-spec.md)
-- HTML 版: `docs/reverse-spec/user-spec.html`
+- HTML 版: `docs/reverse-spec/user-spec.html` を必要時にローカル生成
 
 更新手順:
 

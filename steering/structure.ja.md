@@ -67,26 +67,28 @@ Domain (Core)
 
 ```
 music_metadata_tool/
-├── src/music_metadata_tool/
-│   ├── domain/            # エンティティ/値オブジェクト/ドメインサービス
-│   ├── application/       # ユースケース（サービス、DTO、ポート）
-│   ├── infrastructure/    # ファイル I/O、Mutagen アダプタ、CSV/TSV、API
-│   ├── interface/cli/     # Typer ベースの CLI コマンド
-│   └── __init__.py
-├── tests/                 # pytest（レイヤ別に配置）
-├── storage/               # SDD アーティファクト（specs/changes/validation）
-├── steering/              # プロジェクトメモリ
-├── templates/             # ドキュメント/コードテンプレート
+├── src/
+│   ├── music_metadata_lib/
+│   │   ├── domain/            # エンティティ/値オブジェクト/定数/設定
+│   │   ├── application/       # scan/apply のユースケース
+│   │   ├── infrastructure/    # Mutagen と CSV/TSV のアダプタ
+│   │   ├── interface/cli/     # ライブラリ側 CLI 補助
+│   │   └── cli/
+│   └── music_metadata_tool/
+│       └── interface/cli/     # 配布用 CLI エントリポイント
+├── tests/                     # pytest
+├── storage/                   # specs, logs, 出力ファイル
+├── steering/                  # プロジェクトメモリ
 └── docker-compose.yml / Dockerfile
 ```
 
-プラグインを追加する場合は `src/music_metadata_tool/plugins/{name}/` とし、エントリポイント経由でロードする。
+新機能は既存の `music_metadata_lib` / `music_metadata_tool` の責務に合わせて配置し、存在しないテンプレート用ディレクトリやプラグイン前提の構成は新設しない。
 
 ---
 
 ## Library-First Pattern (Article I)
 
-コア機能は `src/music_metadata_tool` のライブラリとして公開し、CLI も同じ API を呼ぶ。インフラ実装が増えてもドメイン/アプリケーションは純粋ロジックを維持し、テスト可能性を確保する。
+コア機能は `src/music_metadata_lib` に置き、`src/music_metadata_tool` は配布用 CLI の薄い入口として扱う。インフラ実装が増えてもドメイン/アプリケーションは純粋ロジックを維持し、テスト可能性を確保する。
 
 ---
 

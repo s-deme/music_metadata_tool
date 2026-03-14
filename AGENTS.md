@@ -4,30 +4,29 @@
 
 ## Initialized with MUSUBI SDD for Codex CLI
 
-This project uses **MUSUBI** (Ultimate Specification Driven Development).
-
+This project uses MUSUBI as a documentation workflow, but Codex should follow the repository reality first.
 
 ### Prompts
 
-- `/prompts:sdd-steering` - Generate/update project memory
-- `/prompts:sdd-requirements <feature>` - Create EARS requirements
-- `/prompts:sdd-design <feature>` - Generate C4 + ADR design
-- `/prompts:sdd-tasks <feature>` - Break down into tasks
-- `/prompts:sdd-implement <feature>` - Execute implementation
-- `/prompts:sdd-validate <feature>` - Validate constitutional compliance
+- `/prompts:sdd-steering` - sync steering docs with the current codebase
+- `/prompts:sdd-requirements <feature>` - write `storage/specs/<feature>/requirements.md`
+- `/prompts:sdd-design <feature>` - write `storage/specs/<feature>/design.md`
+- `/prompts:sdd-tasks <feature>` - write `storage/specs/<feature>/tasks.md`
+- `/prompts:sdd-implement <feature>` - implement from the existing specs
+- `/prompts:sdd-validate <feature>` - validate spec and implementation consistency
 
 ### Project Memory
 
-- `steering/structure.md` - Architecture patterns
-- `steering/tech.md` - Technology stack
-- `steering/product.md` - Product context
-- `steering/rules/constitution.md` - 9 Constitutional Articles
+- `steering/structure.md` - architecture patterns
+- `steering/tech.md` - technology stack
+- `steering/product.md` - product context
+- `steering/rules/constitution.md` - governance rules
 
-### Learn More
+### Notes For Codex
 
-- [MUSUBI Documentation](https://github.com/your-org/musubi)
-- [Constitutional Governance](steering/rules/constitution.md)
-- [8-Stage SDD Workflow](steering/rules/workflow.md)
+- Prefer `storage/specs/<feature>/` over legacy flat files in `storage/specs/`.
+- `.codex/AGENTS.md` is the Codex-specific instruction source for this workspace.
+- `.codex/prompts/` files are maintained for Codex and should remain short and concrete.
 
 ---
 

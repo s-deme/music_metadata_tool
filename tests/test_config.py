@@ -16,13 +16,23 @@ def test_load_column_config_uses_default_headers_when_config_missing(tmp_path: P
 def test_load_column_config_uses_configured_columns(tmp_path: Path) -> None:
     config_path = tmp_path / "config.json"
     config_path.write_text(
-        json.dumps({"columns": ["file_path", "title", "artist"]}),
+        json.dumps(
+            {
+                "columns": ["file_path", "title", "artist"],
+                "scan_directory": "/workspace/music",
+                "scan_output": "/workspace/storage/scan.tsv",
+                "apply_input": "/workspace/storage/scan.tsv",
+            }
+        ),
         encoding="utf-8",
     )
 
     config = load_column_config(config_path)
 
     assert config.columns == ["file_path", "title", "artist"]
+    assert config.scan_directory == "/workspace/music"
+    assert config.scan_output == "/workspace/storage/scan.tsv"
+    assert config.apply_input == "/workspace/storage/scan.tsv"
 
 
 @pytest.mark.parametrize(
@@ -33,6 +43,9 @@ def test_load_column_config_uses_configured_columns(tmp_path: Path) -> None:
         ({"columns": ["file_path", "title", "title"]}, "duplicates"),
         ({"columns": ["title"]}, "must include 'file_path'"),
         ({"columns": ["file_path", "unknown"]}, "Unsupported columns"),
+        ({"columns": ["file_path"], "scan_directory": 1}, "scan_directory"),
+        ({"columns": ["file_path"], "scan_output": ""}, "scan_output"),
+        ({"columns": ["file_path"], "apply_input": []}, "apply_input"),
     ],
 )
 def test_load_column_config_rejects_invalid_payloads(

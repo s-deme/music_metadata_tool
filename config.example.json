@@ -1,4 +1,7 @@
 {
+  "scan_directory": "/workspace/music",
+  "scan_output": "/workspace/storage/scan.tsv",
+  "apply_input": "/workspace/storage/scan.tsv",
   "columns": [
     "file_path",
     "title",

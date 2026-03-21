@@ -47,12 +47,6 @@ class MetadataWriterAdapter(MetadataWriterPort):
         audio = mutagen.File(file_path, easy=True)
         if audio is None:
             raise ApplyError(f"Unsupported or unreadable audio file: {file_path}")
-        if audio.tags is None:
-            try:
-                audio.add_tags()
-            except Exception:
-                raise ApplyError(f"Unable to add tags to audio file: {file_path}")
-
         tag_map = {
             "title": "title",
             "artist": "artist",
@@ -63,6 +57,15 @@ class MetadataWriterAdapter(MetadataWriterPort):
             "year": "date",
             "genre": "genre",
         }
+
+        if not _has_changes(audio.tags, tags, tag_map):
+            return
+
+        if audio.tags is None:
+            try:
+                audio.add_tags()
+            except Exception:
+                raise ApplyError(f"Unable to add tags to audio file: {file_path}")
 
         for column, value in tags.items():
             key = tag_map.get(column)
@@ -83,3 +86,29 @@ def _set_or_clear(tags: mutagen.Tags, key: str, value: str) -> None:
             del tags[key]
         except KeyError:
             pass
+
+
+def _has_changes(
+    current_tags: mutagen.Tags | None,
+    new_tags: dict[str, str],
+    tag_map: dict[str, str],
+) -> bool:
+    """現在値と比較し、保存が必要な更新だけを検出する。"""
+
+    for column, value in new_tags.items():
+        key = tag_map.get(column)
+        if key is None:
+            continue
+        if _get_tag_value(current_tags, key) != value:
+            return True
+    return False
+
+
+def _get_tag_value(tags: mutagen.Tags | None, key: str) -> str:
+    if tags is None or key not in tags:
+        return ""
+
+    value = tags.get(key)
+    if isinstance(value, list):
+        return str(value[0]) if value else ""
+    return str(value)

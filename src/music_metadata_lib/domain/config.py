@@ -16,9 +16,12 @@ class ConfigError(RuntimeError):
 
 @dataclass(frozen=True)
 class ColumnConfig:
-    """CSV/TSV の列設定。"""
+    """CLI 設定。"""
 
     columns: list[str]
+    scan_directory: str | None = None
+    scan_output: str | None = None
+    apply_input: str | None = None
 
     def tag_columns(self) -> list[str]:
         return [column for column in self.columns if column in TAG_COLUMNS]
@@ -37,7 +40,7 @@ TAG_COLUMNS = [
 
 
 def load_column_config(config_path: Path | None = None) -> ColumnConfig:
-    """config.json から列設定を読み込む。"""
+    """config.json から CLI 設定を読み込む。"""
 
     path = config_path or Path("config.json")
     if not path.exists():
@@ -54,7 +57,12 @@ def load_column_config(config_path: Path | None = None) -> ColumnConfig:
 
     normalized = _normalize_columns(columns)
     _validate_columns(normalized)
-    return ColumnConfig(columns=normalized)
+    return ColumnConfig(
+        columns=normalized,
+        scan_directory=_normalize_optional_path(payload.get("scan_directory"), "scan_directory"),
+        scan_output=_normalize_optional_path(payload.get("scan_output"), "scan_output"),
+        apply_input=_normalize_optional_path(payload.get("apply_input"), "apply_input"),
+    )
 
 
 def _normalize_columns(columns: Iterable[object]) -> list[str]:
@@ -77,3 +85,15 @@ def _validate_columns(columns: list[str]) -> None:
         raise ConfigError(f"Unsupported columns in config: {', '.join(invalid)}")
     if "file_path" not in columns:
         raise ConfigError("Config 'columns' must include 'file_path'.")
+
+
+def _normalize_optional_path(value: object, field_name: str) -> str | None:
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise ConfigError(f"Config '{field_name}' must be a string.")
+
+    normalized = value.strip()
+    if not normalized:
+        raise ConfigError(f"Config '{field_name}' must not be empty.")
+    return normalized

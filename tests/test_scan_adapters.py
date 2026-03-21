@@ -1,6 +1,8 @@
 from pathlib import Path
 import wave
 
+import pytest
+
 from music_metadata_lib.infrastructure.scan_adapters import AudioScannerAdapter, MetadataReaderAdapter
 
 
@@ -50,3 +52,21 @@ def test_metadata_reader_missing_tags_returns_empty(tmp_path: Path) -> None:
     assert tags.disc_number == ""
     assert tags.year == ""
     assert tags.genre == ""
+
+
+def test_metadata_reader_tolerates_parallel_reads(tmp_path: Path) -> None:
+    files = [tmp_path / f"track_{index}.wav" for index in range(8)]
+    for path in files:
+        _write_wav(path)
+
+    reader = MetadataReaderAdapter()
+
+    try:
+        from concurrent.futures import ThreadPoolExecutor
+
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            results = list(executor.map(reader.read, files))
+    except Exception as exc:  # pragma: no cover
+        pytest.fail(str(exc))
+
+    assert len(results) == len(files)

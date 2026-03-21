@@ -63,3 +63,58 @@ def test_metadata_writer_raises_for_unreadable_audio(tmp_path: Path, monkeypatch
     writer = MetadataWriterAdapter()
     with pytest.raises(ApplyError, match="Unsupported or unreadable audio file"):
         writer.write(audio_path, {"title": "Title"})
+
+
+def test_metadata_writer_skips_save_when_tags_are_unchanged(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    audio_path = tmp_path / "track.mp3"
+    audio_path.write_bytes(b"")
+
+    class FakeAudio:
+        def __init__(self) -> None:
+            self.tags = {"title": ["Title"]}
+            self.saved = False
+
+        def add_tags(self) -> None:
+            raise AssertionError("add_tags should not be called")
+
+        def save(self) -> None:
+            self.saved = True
+
+    fake_audio = FakeAudio()
+    monkeypatch.setattr(mutagen, "File", lambda *args, **kwargs: fake_audio)
+
+    writer = MetadataWriterAdapter()
+    writer.write(audio_path, {"title": "Title"})
+
+    assert fake_audio.saved is False
+
+
+def test_metadata_writer_saves_when_tags_change(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    audio_path = tmp_path / "track.mp3"
+    audio_path.write_bytes(b"")
+
+    class FakeAudio:
+        def __init__(self) -> None:
+            self.tags = {"title": ["Old Title"]}
+            self.saved = False
+
+        def add_tags(self) -> None:
+            raise AssertionError("add_tags should not be called")
+
+        def save(self) -> None:
+            self.saved = True
+
+    fake_audio = FakeAudio()
+    monkeypatch.setattr(mutagen, "File", lambda *args, **kwargs: fake_audio)
+
+    writer = MetadataWriterAdapter()
+    writer.write(audio_path, {"title": "New Title"})
+
+    assert fake_audio.tags["title"] == ["New Title"]
+    assert fake_audio.saved is True

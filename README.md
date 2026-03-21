@@ -2,84 +2,33 @@
 
 音楽ファイルのメタデータを一覧出力し、CSV/TSV から更新する CLI。
 
-## 概要
+## 入力フォルダの設定（.env）
 
-- scan: 指定ディレクトリ配下を再帰的に走査し、タグを CSV/TSV に出力
-- apply: CSV/TSV を読み込み、タグ更新（`--write` で書き込み）
+音楽ファイルの実フォルダは `.env` で指定します。
 
-## Docker での実行
+`scan_directory` にはコンテナ内のパスを書き、ホスト側の実パスは `.env` の `MUSIC_SOURCE_DIR` で指定します。
 
-前提: Docker と Docker Compose が利用できること。
+Windows の例:
 
-### ビルド
-
-```bash
-docker compose build
+```env
+MUSIC_SOURCE_DIR=E:\iTunes\iTunes Media\Music
 ```
 
-### コンテナ起動（開発用）
+`.env` はプロジェクト直下に置きます。.env は Git 管理しません。公開用には [\.env.example](/mnt/e/script/music_metadata_tool/.env.example) を置いてあります。
 
-```bash
-docker compose run --rm app
-```
+必要に応じて `MUSIC_METADATA_LOG_PATH` も `.env` で設定できます。
 
-`/workspace/music` には既定でリポジトリ内の `./music` をマウントします。別の音楽フォルダを使う場合は、実行前に `MUSIC_SOURCE_DIR` を指定します。
+## 設定ファイルの作成（config.json）
 
-```bash
-MUSIC_SOURCE_DIR=/absolute/path/to/music docker compose run --rm app
-```
+プロジェクト直下の `config.json` に対象パスと列設定を書きます。
 
-ローカル固定で使う場合は、プロジェクト直下に `.env` を置いて `MUSIC_SOURCE_DIR` を設定します。`.env` は Git 管理しません。公開用には [\.env.example](/mnt/e/script/music_metadata_tool/.env.example) を置いてあります。
-
-`.env` では必要に応じて `MUSIC_METADATA_LOG_PATH` も設定できます。
-
-### テスト実行
-
-```bash
-docker compose run --rm app python -m pytest -q
-```
-
-### CLI ヘルプ
-
-```bash
-docker compose run --rm app python -m music_metadata_tool.interface.cli.main --help
-```
-
-### scan（基本）
-
-```bash
-docker compose run --rm app music-metadata-tool scan /workspace/music --output /workspace/storage/scan.tsv
-```
-
-### scan の詳細
-
-`scan` は指定ディレクトリ配下を再帰的に走査し、音楽ファイルのタグを CSV/TSV に出力します。
-
-主なポイント:
-
-- 対象拡張子: `.mp3`, `.flac`, `.wav`, `.aiff`, `.aif`, `.ogg`, `.m4a`
-- 出力順: `file_path` 昇順（再現性のため固定）
-- 出力パス:
-  - `--output` 省略時は STDOUT に CSV を出力
-  - `.tsv` 拡張子なら TSV、その他は CSV
-- `file_path` は絶対パスで出力
-- 欠落タグは空文字として出力
-
-ヘッダーは次の順序で出力されます。
-
-```
-file_path,format,title,artist,album,album_artist,track_number,disc_number,year,genre
-```
-
-### 設定ファイル（列の表示・順序）
-
-プロジェクト直下の `config.json` で出力列の表示/順序を変更できます。
-`apply` も同じ設定に従い、設定に含まれる列のみを更新対象とします。
-
-公開用リポジトリには [config.example.json](/mnt/e/script/music_metadata_tool/config.example.json) を置いてあります。必要に応じてこれを `config.json` としてコピーして使います。
+まず [config.example.json](/mnt/e/script/music_metadata_tool/config.example.json) を `config.json` としてコピーして、必要なパスに書き換えます。
 
 ```json
 {
+  "scan_directory": "/workspace/music",
+  "scan_output": "/workspace/storage/scan.tsv",
+  "apply_input": "/workspace/storage/scan.tsv",
   "columns": [
     "file_path",
     "title",
@@ -89,105 +38,107 @@ file_path,format,title,artist,album,album_artist,track_number,disc_number,year,g
 }
 ```
 
+設定手順:
+
+1. `config.example.json` を `config.json` としてコピーする
+2. `scan_directory` を対象の音楽フォルダに合わせる
+3. `scan_output` と `apply_input` を出力先ファイルに合わせる
+4. 必要なら `columns` を調整する
+
+設定項目:
+
+- `scan_directory`: `scan` 対象ディレクトリ（コンテナ内パス）
+- `scan_output`: `scan` 出力先
+- `apply_input`: `apply` 入力ファイル
+- `columns`: 出力列と更新対象列
+
 注意点:
 
 - `file_path` は必須
-- 設定に含めない列は出力/更新対象から除外される
-  - 省略した列は `apply` 実行時に変更しない
+- 設定に含めない列は出力対象・更新対象から除外される
+- 省略した列は `apply` 実行時に変更しない
+- コマンドライン引数を渡した場合は、設定ファイルよりコマンドライン引数を優先する
+- `.env` で `MUSIC_SOURCE_DIR` を設定した場合、通常 `scan_directory` は `/workspace/music` を使う
 
-STDOUT へ出力する例:
+## 使い方
+
+初回のみ、先にイメージを作成します。
 
 ```bash
-docker compose run --rm app music-metadata-tool scan /workspace/music > /workspace/storage/scan.csv
+docker compose build
 ```
 
-TSV で出力する例:
+その後は、通常この 2 コマンドを使います。
+
+```bash
+docker compose run --rm app music-metadata-tool scan
+docker compose run --rm app music-metadata-tool apply --write
+```
+
+1. `config.json` を作成する
+2. `docker compose build`
+3. `scan` で TSV/CSV を出力する
+4. Excel などで編集する
+5. `apply --write` で書き戻す
+
+## コマンド
+
+### scan
+
+指定ディレクトリ配下を再帰的に走査し、タグを CSV/TSV に出力します。
+
+```bash
+docker compose run --rm app music-metadata-tool scan
+```
+
+主な仕様:
+
+- 対象拡張子: `.mp3`, `.flac`, `.wav`, `.aiff`, `.aif`, `.ogg`, `.m4a`
+- 出力順: `file_path` 昇順
+- `file_path` は絶対パスで出力
+- 欠落タグは空文字で出力
+- `scan_output` が `.tsv` なら TSV、それ以外は CSV
+- `--output` を省略し、`scan_output` も未設定なら STDOUT に CSV 出力
+
+出力ヘッダー:
+
+```
+file_path,format,title,artist,album,album_artist,track_number,disc_number,year,genre
+```
+
+設定を一時的に上書きしたい場合:
 
 ```bash
 docker compose run --rm app music-metadata-tool scan /workspace/music --output /workspace/storage/scan.tsv
 ```
 
-サブディレクトリだけを対象にする例:
+### apply
+
+編集済み CSV/TSV を読み込み、音楽ファイルへ書き戻します。
 
 ```bash
-docker compose run --rm app music-metadata-tool scan /workspace/music/albums --output /workspace/storage/albums.tsv
+docker compose run --rm app music-metadata-tool apply --write
 ```
 
-参照フォルダを変える方法（PowerShell 例）:
-
-```powershell
-$env:MUSIC_SOURCE_DIR="E:\music\albums"
-docker compose run --rm app music-metadata-tool scan /workspace/music --output /workspace/storage/scan.tsv
-```
-
-ホスト側の任意パスに保存したい場合（Windows PowerShell）:
-
-```powershell
-docker compose run --rm app music-metadata-tool scan /workspace/storage > E:\script\music_metadata_tool\scan.csv
-```
-
-出力結果を確認する例（先頭 5 行）:
+書き込み前に確認したい場合:
 
 ```bash
-docker compose run --rm app music-metadata-tool scan /workspace/storage | head -n 5
+docker compose run --rm app music-metadata-tool apply
 ```
 
-### apply（ドライラン）
-
-```bash
-docker compose run --rm app music-metadata-tool apply /workspace/storage/scan.tsv
-```
-
-### apply（書き込み）
+入力ファイルを一時的に上書きしたい場合:
 
 ```bash
 docker compose run --rm app music-metadata-tool apply /workspace/storage/scan.tsv --write
 ```
 
+### CLI ヘルプ
+
+```bash
+docker compose run --rm app python -m music_metadata_tool.interface.cli.main --help
+```
+
 ### ログファイル
 
-CLI 実行ログは `storage/logs/cli.log` に追記されます（開始/終了/エラー/対象件数）。  
+CLI 実行ログは `storage/logs/cli.log` に追記されます（開始/終了/エラー/対象件数）。
 出力先は環境変数 `MUSIC_METADATA_LOG_PATH` で変更できます。
-
-## 開発・検証方針
-
-- Python 実行、テスト、CLI 検証は Docker コンテナ内で行う
-- ホスト側の Python 環境には依存しない
-- テストの標準コマンドは `docker compose run --rm app python -m pytest -q`
-
-## リバース仕様書
-
-既存実装から逆生成した利用者向け仕様は `docs/reverse-spec/` に配置しています。
-
-- 一次ソース: [docs/reverse-spec/feature-inventory.csv](/mnt/e/script/music_metadata_tool/docs/reverse-spec/feature-inventory.csv)
-- 利用者向け文書: [docs/reverse-spec/user-spec.md](/mnt/e/script/music_metadata_tool/docs/reverse-spec/user-spec.md)
-- HTML 版: `docs/reverse-spec/user-spec.html` を必要時にローカル生成
-
-更新手順:
-
-1. `docs/reverse-spec/feature-inventory.csv` を更新する
-2. `./bin/reverse-spec-md` で Markdown を再生成する
-3. `./bin/reverse-spec-html` で HTML を再生成する
-4. `./bin/test` でテストを確認する
-
-Markdown を再生成する場合:
-
-```bash
-./bin/reverse-spec-md
-```
-
-HTML を再生成する場合:
-
-```bash
-./bin/reverse-spec-html
-```
-
-## 未実装コマンド
-
-- `rename`
-- `validate`
-- `config`
-
-これらは現時点ではプレースホルダです。ヘルプには表示されますが、実処理は持たず `not yet implemented` を返します。
-
-ソースは `.` を `/workspace` にマウントしているため、ホストの変更がコンテナに反映されます。

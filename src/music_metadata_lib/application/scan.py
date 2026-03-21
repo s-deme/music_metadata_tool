@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Optional, Protocol
@@ -107,9 +109,15 @@ class ScanDirectoryUseCase:
 
         def iter_rows() -> Iterable[ScanRow]:
             nonlocal count
-            for file_path in self._scanner.scan(root_dir):
-                count += 1
-                yield self._build_row(file_path, self._reader.read(file_path))
+            file_paths = self._scanner.scan(root_dir)
+            max_workers = min(8, max(1, (os.cpu_count() or 1) * 2))
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                for file_path, tags in zip(
+                    file_paths,
+                    executor.map(self._reader.read, file_paths),
+                ):
+                    count += 1
+                    yield self._build_row(file_path, tags)
 
         rows = iter_rows()
         self._writer.write(rows, output_path, delimiter, headers)

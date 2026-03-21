@@ -75,3 +75,55 @@ def test_apply_invalid_config_exits_non_zero(tmp_path: Path, monkeypatch) -> Non
     assert result.exit_code != 0
     stderr = getattr(result, "stderr", "")
     assert "Failed to load config" in result.output or "Failed to load config" in stderr
+
+
+def test_apply_uses_configured_input(tmp_path: Path, monkeypatch) -> None:
+    audio_path = tmp_path / "track.wav"
+    audio_path.write_bytes(b"")
+    input_path = tmp_path / "scan.csv"
+    _write_csv(
+        input_path,
+        [
+            [
+                "file_path",
+                "format",
+                "title",
+                "artist",
+                "album",
+                "album_artist",
+                "track_number",
+                "disc_number",
+                "year",
+                "genre",
+            ],
+            [str(audio_path), "wav", "", "", "", "", "", "", "", ""],
+        ],
+    )
+    (tmp_path / "config.json").write_text(
+        (
+            "{\n"
+            '  "columns": ["file_path", "format", "title", "artist", "album", "album_artist", "track_number", "disc_number", "year", "genre"],\n'
+            f'  "apply_input": "{input_path}"\n'
+            "}\n"
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.chdir(tmp_path)
+
+    result = runner.invoke(app, ["apply"])
+
+    assert result.exit_code == 0
+
+
+def test_apply_requires_input_when_not_in_config(tmp_path: Path, monkeypatch) -> None:
+    (tmp_path / "config.json").write_text(
+        '{"columns": ["file_path", "format", "title", "artist", "album", "album_artist", "track_number", "disc_number", "year", "genre"]}',
+        encoding="utf-8",
+    )
+    monkeypatch.chdir(tmp_path)
+
+    result = runner.invoke(app, ["apply"])
+
+    assert result.exit_code != 0
+    stderr = getattr(result, "stderr", "")
+    assert "apply input is required" in result.output or "apply input is required" in stderr

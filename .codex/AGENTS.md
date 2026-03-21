@@ -30,6 +30,15 @@ Use the least expensive command that proves the change:
 
 - `docker compose run --rm app python -m pytest -q`
 - `docker compose run --rm app python -m music_metadata_tool.interface.cli.main --help`
+- `./bin/test`
+- `./bin/test-watch`
+
+## Developer Notes
+
+- `README.md` is user-facing. Keep developer workflow notes out of it unless they are directly useful to end users operating the CLI.
+- Put Codex/developer workflow guidance here in `.codex/AGENTS.md`.
+- For local edit-loop automation, `./bin/test-watch` polls `src/`, `tests/`, `pyproject.toml`, `README.md`, and `config.json`, then reruns `./bin/test` on change.
+- Prefer Docker-backed commands for validation; do not assume host `pytest` is installed.
 
 ## Prompt Files
 

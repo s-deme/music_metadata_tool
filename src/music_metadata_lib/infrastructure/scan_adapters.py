@@ -24,12 +24,12 @@ class AudioScannerAdapter(AudioScannerPort):
     """拡張子フィルタ付きのファイル走査アダプタ。"""
 
     def scan(self, root_dir: Path) -> Iterable[Path]:
-        candidates = [
+        candidates = (
             path
             for path in root_dir.rglob("*")
             if path.is_file() and path.suffix.lower() in SUPPORTED_EXTENSIONS
-        ]
-        return sorted(candidates, key=lambda item: str(item))
+        )
+        return sorted(candidates, key=str)
 
 
 class MetadataReaderAdapter(MetadataReaderPort):

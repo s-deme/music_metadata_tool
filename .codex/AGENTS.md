@@ -11,8 +11,8 @@ This repository uses Codex CLI as the primary coding agent.
 ## Codex Rules For This Repo
 
 - Prefer the real implementation and tests over stale steering text when they conflict.
-- Treat `storage/specs/<feature>/` as the canonical location for feature specs.
-- Legacy flat files such as `storage/specs/scan-design.md` may exist; do not create new ones unless the user explicitly asks.
+- Treat tracked files in `specs/` as canonical: `specs/<feature>-requirements.md`, `specs/<feature>-design.md`, and `specs/<feature>-tasks.md`.
+- `storage/specs/` is ignored legacy/local material. Do not create or update canonical specifications there.
 - Keep instructions concise. Do not emulate multi-agent orchestration, Claude-only tools, or placeholder templates.
 - Use the Python/Docker workflow documented in `README.md`.
 
@@ -22,7 +22,7 @@ This repository uses Codex CLI as the primary coding agent.
 - Main packages: `src/music_metadata_lib/` and `src/music_metadata_tool/`
 - Tests: `tests/`
 - Steering docs: `steering/*.md`
-- Specs: `storage/specs/<feature>/requirements.md`, `design.md`, `tasks.md`
+- Specs: `specs/<feature>-requirements.md`, `specs/<feature>-design.md`, `specs/<feature>-tasks.md`
 
 ## Validation Commands
 

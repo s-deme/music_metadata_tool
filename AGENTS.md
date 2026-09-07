@@ -9,9 +9,9 @@ This project uses MUSUBI as a documentation workflow, but Codex should follow th
 ### Prompts
 
 - `/prompts:sdd-steering` - sync steering docs with the current codebase
-- `/prompts:sdd-requirements <feature>` - write `storage/specs/<feature>/requirements.md`
-- `/prompts:sdd-design <feature>` - write `storage/specs/<feature>/design.md`
-- `/prompts:sdd-tasks <feature>` - write `storage/specs/<feature>/tasks.md`
+- `/prompts:sdd-requirements <feature>` - update `specs/<feature>-requirements.md`
+- `/prompts:sdd-design <feature>` - update `specs/<feature>-design.md`
+- `/prompts:sdd-tasks <feature>` - update `specs/<feature>-tasks.md`
 - `/prompts:sdd-implement <feature>` - implement from the existing specs
 - `/prompts:sdd-validate <feature>` - validate spec and implementation consistency
 
@@ -24,7 +24,8 @@ This project uses MUSUBI as a documentation workflow, but Codex should follow th
 
 ### Notes For Codex
 
-- Prefer `storage/specs/<feature>/` over legacy flat files in `storage/specs/`.
+- Treat the tracked flat files in `specs/` as canonical: `<feature>-requirements.md`, `<feature>-design.md`, and `<feature>-tasks.md`.
+- `storage/specs/` is ignored legacy/local material. Do not create or update canonical specifications there.
 - `.codex/AGENTS.md` is the Codex-specific instruction source for this workspace.
 - `.codex/prompts/` files are maintained for Codex and should remain short and concrete.
 

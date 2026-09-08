@@ -1,36 +1,6 @@
-# MUSUBI - workspace
+# Music Metadata Tool
 
-機能1：指定フォルダ以下にある音楽ファイルのメタデータを一覧で出力。機能2：メタデータCSVをインポートし指定フォルダ内の音楽ファイルメタデータを更新する。その他：CSVの更新はEXCELなどで行うので機能化は不要
-
-## Initialized with MUSUBI SDD for Codex CLI
-
-This project uses MUSUBI as a documentation workflow, but Codex should follow the repository reality first.
-
-### Prompts
-
-- `/prompts:sdd-steering` - sync steering docs with the current codebase
-- `/prompts:sdd-requirements <feature>` - update `specs/<feature>-requirements.md`
-- `/prompts:sdd-design <feature>` - update `specs/<feature>-design.md`
-- `/prompts:sdd-tasks <feature>` - update `specs/<feature>-tasks.md`
-- `/prompts:sdd-implement <feature>` - implement from the existing specs
-- `/prompts:sdd-validate <feature>` - validate spec and implementation consistency
-
-### Project Memory
-
-- `steering/structure.md` - architecture patterns
-- `steering/tech.md` - technology stack
-- `steering/product.md` - product context
-- `steering/rules/constitution.md` - governance rules
-
-### Notes For Codex
-
-- Treat the tracked flat files in `specs/` as canonical: `<feature>-requirements.md`, `<feature>-design.md`, and `<feature>-tasks.md`.
-- `storage/specs/` is ignored legacy/local material. Do not create or update canonical specifications there.
-- `.codex/AGENTS.md` is the Codex-specific instruction source for this workspace.
-- `.codex/prompts/` files are maintained for Codex and should remain short and concrete.
-
----
-
-**Agent**: Codex CLI
-**Initialized**: 2025-12-15
-**MUSUBI Version**: 0.1.0
+- 機能範囲は音楽メタデータの scan（CSV/TSV出力）と apply（CSV/TSV取込）だけで、CSV編集機能は追加しない。
+- 実装は src/music_metadata_lib/ と src/music_metadata_tool/、テストは tests/ を正本にする。
+- 仕様は追跡対象の specs/<feature>-*.md を使い、storage/specs/ は更新しないレガシー領域とする。
+- 検証は README の Docker または bin/test を優先する。

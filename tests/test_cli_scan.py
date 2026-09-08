@@ -1,7 +1,8 @@
+import json
+
 from typer.testing import CliRunner
 
 from music_metadata_tool.interface.cli.main import app
-
 
 runner = CliRunner()
 
@@ -32,12 +33,12 @@ def test_scan_uses_configured_directory_and_output(tmp_path, monkeypatch) -> Non
     music_dir.mkdir()
     output_path = tmp_path / "storage" / "scan.csv"
     (tmp_path / "config.json").write_text(
-        (
-            "{\n"
-            '  "columns": ["file_path", "format"],\n'
-            f'  "scan_directory": "{music_dir}",\n'
-            f'  "scan_output": "{output_path}"\n'
-            "}\n"
+        json.dumps(
+            {
+                "columns": ["file_path", "format"],
+                "scan_directory": str(music_dir),
+                "scan_output": str(output_path),
+            }
         ),
         encoding="utf-8",
     )

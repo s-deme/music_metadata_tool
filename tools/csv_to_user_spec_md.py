@@ -96,7 +96,7 @@ def main() -> int:
     input_path = Path(sys.argv[1])
     output_path = Path(sys.argv[2])
     rows = read_rows(input_path)
-    content = render_markdown(rows, str(input_path))
+    content = render_markdown(rows, input_path.as_posix())
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(content + "\n", encoding="utf-8")

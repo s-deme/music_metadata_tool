@@ -1,11 +1,11 @@
 # User Specification
 
-この文書は `E:\script\music_metadata_tool\docs\reverse-spec\feature-inventory.csv` を一次ソースとして自動生成したものです。
+この文書は `docs\reverse-spec\feature-inventory.csv` を一次ソースとして自動生成したものです。
 
 ## Summary
 
 - 対象: `common`, `config`, `scan`, `apply`, `stub`
-- 一次ソース: `E:\script\music_metadata_tool\docs\reverse-spec\feature-inventory.csv`
+- 一次ソース: `docs\reverse-spec\feature-inventory.csv`
 - 運用: 実装変更時は CSV を先に更新し、この文書と HTML を再生成する
 
 ## Common

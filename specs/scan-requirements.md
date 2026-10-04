@@ -89,3 +89,7 @@ IF `config.json` is invalid, THEN the system SHALL exit with a non-zero status a
 **Acceptance Criteria**
 - 終了コードが 0 以外
 - エラーメッセージが設定ファイル起因であることが分かる
+
+### Security: spreadsheet-safe export
+scan --spreadsheet-safe SHALL prefix formula candidates with an apostrophe after accounting for leading whitespace/control characters.
+The file SHALL contain the view-only format marker before the normal header. Normal output SHALL retain raw values and warn once when formula candidates occur.

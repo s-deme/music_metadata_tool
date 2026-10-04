@@ -19,7 +19,9 @@ from music_metadata_lib.infrastructure.scan_adapters import (
 from music_metadata_lib.interface.cli.logging import LogContext, default_log_path, log_event
 
 
-def run_scan(directory: Path | None, output: Path | None) -> None:
+def run_scan(
+    directory: Path | None, output: Path | None, spreadsheet_safe: bool = False
+) -> None:
     """ディレクトリ配下を走査し CSV/TSV を出力する。"""
 
     log_ctx = LogContext(command="scan", log_path=default_log_path())
@@ -43,7 +45,7 @@ def run_scan(directory: Path | None, output: Path | None) -> None:
     use_case = ScanDirectoryUseCase(
         scanner=AudioScannerAdapter(),
         reader=MetadataReaderAdapter(),
-        writer=DelimitedWriterAdapter(),
+        writer=DelimitedWriterAdapter(spreadsheet_safe=spreadsheet_safe),
     )
     try:
         count = use_case.execute(

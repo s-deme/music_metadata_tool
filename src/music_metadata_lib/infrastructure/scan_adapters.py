@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import sys
+import warnings
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterable, Iterator, Optional, TextIO
@@ -18,6 +19,9 @@ from music_metadata_lib.application.scan import (
     TagSet,
 )
 from music_metadata_lib.domain.constants import CSV_HEADERS, SUPPORTED_EXTENSIONS
+from music_metadata_lib.infrastructure.delimited_format import (
+    SPREADSHEET_SAFE_MARKER, formula_candidate, spreadsheet_value,
+)
 
 
 class AudioScannerAdapter(AudioScannerPort):
@@ -59,6 +63,9 @@ class MetadataReaderAdapter(MetadataReaderPort):
 class DelimitedWriterAdapter(DelimitedWriterPort):
     """CSV/TSV の逐次書き込みアダプタ。"""
 
+    def __init__(self, spreadsheet_safe: bool = False) -> None:
+        self.spreadsheet_safe = spreadsheet_safe
+
     def write(
         self,
         rows: Iterable[ScanRow],
@@ -68,9 +75,23 @@ class DelimitedWriterAdapter(DelimitedWriterPort):
     ) -> None:
         with _open_output(output_path) as handle:
             writer = csv.writer(handle, delimiter=delimiter)
+            if self.spreadsheet_safe:
+                writer.writerow([SPREADSHEET_SAFE_MARKER])
             writer.writerow(headers)
+            warned = False
             for row in rows:
-                writer.writerow(_row_values(row, headers))
+                values = _row_values(row, headers)
+                if self.spreadsheet_safe:
+                    values = [spreadsheet_value(value) for value in values]
+                elif not warned and any(formula_candidate(value) for value in values):
+                    warnings.warn(
+                        "Formula-like values found. Use scan --spreadsheet-safe for spreadsheet "
+                        "viewing; normal output preserves tags for apply.",
+                        UserWarning,
+                        stacklevel=2,
+                    )
+                    warned = True
+                writer.writerow(values)
 
 
 def _row_values(row: ScanRow, headers: list[str]) -> list[str]:

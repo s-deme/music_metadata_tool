@@ -96,3 +96,6 @@ Library-first を前提に、`scan` は Application 層のユースケースと�
 - REQ-SCAN-009 -> AudioScannerAdapter (sorting)
 - REQ-SCAN-011 -> CLI config loader, DelimitedWriterAdapter
 - REQ-SCAN-012 -> CLI error mapping
+
+## Spreadsheet viewing mode
+The CLI passes a Boolean flag to DelimitedWriterAdapter. The writer uses delimited_format helpers and writes a file-level marker, then escaped values. Ordinary export and import retain tag values without automatic unescaping.

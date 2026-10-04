@@ -1,11 +1,11 @@
 # User Specification
 
-この文書は `docs/reverse-spec/feature-inventory.csv` を一次ソースとして自動生成したものです。
+この文書は `E:\script\music_metadata_tool\docs\reverse-spec\feature-inventory.csv` を一次ソースとして自動生成したものです。
 
 ## Summary
 
 - 対象: `common`, `config`, `scan`, `apply`, `stub`
-- 一次ソース: `docs/reverse-spec/feature-inventory.csv`
+- 一次ソース: `E:\script\music_metadata_tool\docs\reverse-spec\feature-inventory.csv`
 - 運用: 実装変更時は CSV を先に更新し、この文書と HTML を再生成する
 
 ## Common
@@ -175,6 +175,15 @@ CLI ログの既定出力先は `storage/logs/cli.log` である
 - 補足: 未設定列は出力しない
 - 状態: tested
 - 根拠: src/music_metadata_lib/application/scan.py; src/music_metadata_lib/infrastructure/scan_adapters.py; src/music_metadata_lib/domain/config.py; README.md; tests/test_scan_use_case.py
+
+### RS-032 Spreadsheet-safe scan
+
+scan --spreadsheet-safe は数式候補を文字列化して閲覧専用の形式表示を付ける
+
+- 条件: 安全出力を指定した場合
+- 補足: 通常出力は互換性を維持し危険値で警告する。apply は安全出力を拒否する。
+- 状態: tested
+- 根拠: src/music_metadata_lib/infrastructure/delimited_format.py; tests/test_spreadsheet_security.py
 
 ## Apply
 

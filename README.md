@@ -108,3 +108,11 @@ docker compose run --rm app python -m music_metadata_tool.interface.cli.main --h
 ## ログ
 
 CLI実行ログは既定で `storage/logs/cli.log` に追記されます。出力先は環境変数 `MUSIC_METADATA_LOG_PATH` で変更できます。
+
+## CSV/TSVを表計算ソフトで閲覧する
+
+music-metadata-tool scan MUSIC_DIR --spreadsheet-safe -o view.csv は数式候補
+（先頭空白・制御文字を含む = + - @）にアポストロフィを付けます。
+先頭行に spreadsheet-safe v1 (view only) を表示し、apply はこの形式を拒否します。
+タグ編集・再取込にはフラグなしの通常出力を使ってください。通常出力は元のタグを
+維持し、数式候補が見つかった場合に標準エラーへ警告します。

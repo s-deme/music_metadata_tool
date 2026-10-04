@@ -74,3 +74,6 @@ IF `config.json` is invalid, THEN the system SHALL exit with a non-zero status a
 **Acceptance Criteria**
 - 終了コードが 0 以外
 - エラーメッセージが設定ファイル起因であることが分かる
+
+### Security: reject viewing exports
+apply SHALL reject a spreadsheet-safe file marker before any tag writes, including dry-run. Users SHALL rescan without the flag for editable data.

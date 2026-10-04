@@ -8,6 +8,8 @@ from typing import Iterable, Iterator
 
 import mutagen
 
+from music_metadata_lib.infrastructure.delimited_format import SPREADSHEET_SAFE_MARKER
+
 from music_metadata_lib.application.apply import ApplyError, ApplyRowData, DelimitedReaderPort, MetadataWriterPort
 
 
@@ -21,6 +23,12 @@ class DelimitedReaderAdapter(DelimitedReaderPort):
         required_headers: list[str],
     ) -> Iterable[ApplyRowData]:
         with input_path.open("r", encoding="utf-8", newline="") as handle:
+            if handle.readline().lstrip("\ufeff").rstrip("\r\n") == SPREADSHEET_SAFE_MARKER:
+                raise ApplyError(
+                    "Spreadsheet-safe export is view only and cannot be applied. "
+                    "Run scan without --spreadsheet-safe to produce editable tag data."
+                )
+            handle.seek(0)
             reader = csv.DictReader(handle, delimiter=delimiter)
             headers = reader.fieldnames or []
             missing = [header for header in required_headers if header not in headers]

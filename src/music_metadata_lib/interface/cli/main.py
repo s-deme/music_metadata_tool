@@ -19,8 +19,12 @@ def scan(
         "-o",
         help="出力先 (省略時は STDOUT、.tsv は TSV で出力)",
     ),
+    spreadsheet_safe: bool = typer.Option(
+        False, "--spreadsheet-safe",
+        help="表計算ソフト用に数式候補を文字列化（閲覧専用、apply不可）",
+    ),
 ) -> None:
-    run_scan(directory, output)
+    run_scan(directory, output, spreadsheet_safe)
 
 
 @app.command(help="CSV/TSV からタグを書き戻し")
